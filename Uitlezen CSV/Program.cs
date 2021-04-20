@@ -14,30 +14,65 @@ namespace Uitlezen_CSV
 			System.Net.WebClient webC = new System.Net.WebClient();
 			string csv = webC.DownloadString("https://gist.githubusercontent.com/armgilles/194bcff35001e7eb53a2a8b441e8b2c6/raw/92200bc0a673d5ce2110aaad4544ed6c4010f687/pokemon.csv");
 
-			int requestList = -1;
+			bool correctInput = true;
+			int[] requestList;
 			string input;
 			string output = "";
 
+			// get user input of wanted data
 			do
 			{
+				correctInput = true;
 				Console.WriteLine("Wich data do you want? pokenumber,name,type1,type2,total,HP,attack,defense,spAtk,spDef,speed,generation,legendary");
 				input = Console.ReadLine();
-				requestList = GetRequestList(input);
-			} while (requestList == -1);
+				string[] inputSplit = input.Split(',');
+				requestList = new int [inputSplit.Length];
+				input = "";
+				for (int i =0; i < inputSplit.Length; i++)
+				{
+					input += inputSplit[i] + " ";
+					requestList[i] = GetRequestList(inputSplit[i]);
+					if(requestList[i] == -1)
+					{
+						correctInput = false;
+					}				
+				}
+				
+			} while (!correctInput);
 
 			string[] splitted = csv.Split('\n');
-
+			string[] lijnsplit = new string [splitted[0].Split(',').Length];
+			int [] length = new int [requestList.Length]; // store longest string of category to space evenly
+			
+			// get longest string in list for equal space
 			for (int i = 1; i < splitted.Length - 1; i++)
 			{
-				string[] lijnsplit = splitted[i].Split(',');
-				Console.WriteLine($"{input}: {lijnsplit[requestList]}");
-				//output += $"{input}: {lijnsplit[requestList]}\n";
+				lijnsplit = splitted[i].Split(',');
+				for (int j = 0; j < requestList.Length; j++)
+				{
+					if (lijnsplit[requestList[j]].Length > length[j])
+					{
+						length[j] = lijnsplit[requestList[j]].Length;
+					}
+				}
+			}
+			
+			// show the list evenly spaced
+			for (int i = 1; i < splitted.Length - 1; i++)
+			{
+				lijnsplit = splitted[i].Split(',');
+				for (int j = 0; j < requestList.Length; j++)
+				{	
+					Console.Write($"{lijnsplit[requestList[j]]}" + new string(' ', length[j] - lijnsplit[requestList[j]].Length) + "\t");
+				}
+				Console.WriteLine();
 			}
 
 			int from = 0;
 			int to = 0;
 			bool invalid = true;
 
+			// select range to output to file and screen
 			do
 			{
 				Console.WriteLine("Wich data do you want? from 1 to 801");
@@ -53,11 +88,18 @@ namespace Uitlezen_CSV
 
 			} while (invalid);
 
+			// output to file and screen selected range
 			for (int i = from; i < to; i++)
 			{
-				string[] lijnsplit = splitted[i].Split(',');
-				//Console.WriteLine($"{input}: {lijnsplit[requestList]}");
-				output += $"{input}: {lijnsplit[requestList]}\n";
+				lijnsplit = splitted[i].Split(',');
+				for (int j = 0; j < requestList.Length; j++)
+				{
+					Console.Write($"{lijnsplit[requestList[j]]}" + new string(' ', length[j] - lijnsplit[requestList[j]].Length) + "\t");
+					//Console.WriteLine($"{input}: {lijnsplit[requestList]}");
+					output += $"{lijnsplit[requestList[j]]}" + new string(' ', length[j] - lijnsplit[requestList[j]].Length) + "\t";
+				}
+				Console.WriteLine();
+				output += "\n";
 			}
 
 			CsvWriter.WriteTXTStreamWriter(input, output);
@@ -98,5 +140,6 @@ namespace Uitlezen_CSV
 
 			}
 		}
+
 	}
 }
